@@ -1,7 +1,4 @@
-import XCTest
 @testable import Functions
+import XCTest
 
-final class functions_swiftTests: XCTestCase {
-    func testExample() throws {
-    }
-}
+final class FunctionsTests: XCTestCase {}
