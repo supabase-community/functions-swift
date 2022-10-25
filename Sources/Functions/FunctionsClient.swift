@@ -3,12 +3,17 @@ import Foundation
 public final class FunctionsClient {
   let url: URL
   var headers: [String: String]
+  let http: FunctionsHTTPClient
 
-  private let session: URLSession = .shared
-
-  public init(url: URL, headers: [String: String] = [:]) {
+  public init(
+    url: URL,
+    headers: [String: String] = [:],
+    http: FunctionsHTTPClient? = nil
+  ) {
     self.url = url
     self.headers = headers
+    self.http = http ?? DefaultFunctionsHTTPClient()
+
     self.headers["X-Client-Info"] = "functions-swift/\(version)"
   }
 
@@ -74,20 +79,16 @@ public final class FunctionsClient {
     request.httpBody = body
     request.allHTTPHeaderFields = invokeHeaders.merging(headers) { invokeHeader, _ in invokeHeader }
 
-    let (data, response) = try await session.data(for: request)
-    guard let httpResponse = response as? HTTPURLResponse else {
-      throw URLError(.badServerResponse)
+    let (data, response) = try await http.execute(request, client: self)
+    guard 200 ..< 300 ~= response.statusCode else {
+      throw FunctionsError.httpError(code: response.statusCode, data: data)
     }
 
-    guard 200 ..< 300 ~= httpResponse.statusCode else {
-      throw FunctionsError.httpError(code: httpResponse.statusCode, data: data)
-    }
-
-    let isRelayError = httpResponse.value(forHTTPHeaderField: "x-relay-error") == "true"
+    let isRelayError = response.value(forHTTPHeaderField: "x-relay-error") == "true"
     if isRelayError {
       throw FunctionsError.relayError
     }
 
-    return (data, httpResponse)
+    return (data, response)
   }
 }
