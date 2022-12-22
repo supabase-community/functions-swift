@@ -1,20 +1,23 @@
 import Foundation
+import Get
 
 public final class FunctionsClient {
   let url: URL
   var headers: [String: String]
-  let http: FunctionsHTTPClient
+
+  let client: APIClient
 
   public init(
     url: URL,
     headers: [String: String] = [:],
-    http: FunctionsHTTPClient? = nil
+    apiClientDelegate: APIClientDelegate? = nil
   ) {
     self.url = url
     self.headers = headers
-    self.http = http ?? DefaultFunctionsHTTPClient()
-
     self.headers["X-Client-Info"] = "functions-swift/\(version)"
+    client = APIClient(baseURL: url) {
+      $0.delegate = apiClientDelegate
+    }
   }
 
   /// Updates the authorization header.
@@ -71,24 +74,28 @@ public final class FunctionsClient {
     functionName: String,
     invokeOptions: FunctionInvokeOptions
   ) async throws -> (Data, HTTPURLResponse) {
-    let body = invokeOptions.body
-    let invokeHeaders = invokeOptions.headers
+    let request = Request(
+      path: functionName,
+      method: .post,
+      body: invokeOptions.body,
+      headers: invokeOptions.headers.merging(headers) { first, _ in first }
+    )
 
-    var request = URLRequest(url: url.appendingPathComponent(functionName))
-    request.httpMethod = "POST"
-    request.httpBody = body
-    request.allHTTPHeaderFields = invokeHeaders.merging(headers) { invokeHeader, _ in invokeHeader }
+    let response = try await client.data(for: request)
 
-    let (data, response) = try await http.execute(request, client: self)
-    guard 200 ..< 300 ~= response.statusCode else {
-      throw FunctionsError.httpError(code: response.statusCode, data: data)
+    guard let httpResponse = response.response as? HTTPURLResponse else {
+      throw URLError(.badServerResponse)
     }
 
-    let isRelayError = response.value(forHTTPHeaderField: "x-relay-error") == "true"
+    guard 200 ..< 300 ~= httpResponse.statusCode else {
+      throw FunctionsError.httpError(code: httpResponse.statusCode, data: response.data)
+    }
+
+    let isRelayError = httpResponse.value(forHTTPHeaderField: "x-relay-error") == "true"
     if isRelayError {
       throw FunctionsError.relayError
     }
 
-    return (data, response)
+    return (response.data, httpResponse)
   }
 }
