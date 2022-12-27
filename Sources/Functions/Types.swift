@@ -16,7 +16,7 @@ public struct FunctionInvokeOptions {
   let headers: [String: String]
   let body: Data?
 
-  public init<T: Encodable>(headers: [String: String] = [:], body: T) {
+  public init(headers: [String: String] = [:], body: some Encodable) {
     var headers = headers
 
     switch body {

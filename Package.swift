@@ -1,4 +1,4 @@
-// swift-tools-version: 5.5
+// swift-tools-version: 5.7
 
 import PackageDescription
 
@@ -20,7 +20,15 @@ let package = Package(
   targets: [
     .target(
       name: "Functions",
-      dependencies: ["Get"]
+      dependencies: ["Get"],
+      swiftSettings: [
+        .unsafeFlags(
+          [
+            "-warn-concurrency",
+            "-enable-actor-data-race-checks",
+          ]
+        ),
+      ]
     ),
     .testTarget(
       name: "FunctionsTests",

@@ -1,5 +1,5 @@
-import Foundation
-import Get
+@preconcurrency import Foundation
+@preconcurrency import Get
 
 public final class FunctionsClient {
   let url: URL
