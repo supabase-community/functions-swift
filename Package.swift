@@ -20,15 +20,7 @@ let package = Package(
   targets: [
     .target(
       name: "Functions",
-      dependencies: ["Get"],
-      swiftSettings: [
-        .unsafeFlags(
-          [
-            "-warn-concurrency",
-            "-enable-actor-data-race-checks",
-          ]
-        ),
-      ]
+      dependencies: ["Get"]
     ),
     .testTarget(
       name: "FunctionsTests",
