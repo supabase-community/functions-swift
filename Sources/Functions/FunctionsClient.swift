@@ -1,23 +1,22 @@
-@preconcurrency import Foundation
-@preconcurrency import Get
+import Foundation
 
 public final class FunctionsClient {
+  public typealias FetchHandler = (URLRequest) async throws -> (Data, URLResponse)
+
   let url: URL
   var headers: [String: String]
 
-  let client: APIClient
+  private let fetch: FetchHandler
 
   public init(
     url: URL,
     headers: [String: String] = [:],
-    apiClientDelegate: APIClientDelegate? = nil
+    fetch: @escaping FetchHandler = URLSession.shared.data(for:)
   ) {
     self.url = url
     self.headers = headers
     self.headers["X-Client-Info"] = "functions-swift/\(version)"
-    client = APIClient(baseURL: url) {
-      $0.delegate = apiClientDelegate
-    }
+    self.fetch = fetch
   }
 
   /// Updates the authorization header.
@@ -74,21 +73,21 @@ public final class FunctionsClient {
     functionName: String,
     invokeOptions: FunctionInvokeOptions
   ) async throws -> (Data, HTTPURLResponse) {
-    let request = Request(
-      path: functionName,
-      method: invokeOptions.method.map({ HTTPMethod(rawValue: $0.rawValue) }) ?? .post,
-      body: invokeOptions.body,
-      headers: invokeOptions.headers.merging(headers) { first, _ in first }
-    )
+    let url = self.url.appendingPathComponent(functionName)
 
-    let response = try await client.data(for: request)
+    var urlRequest = URLRequest(url: url)
+    urlRequest.allHTTPHeaderFields = invokeOptions.headers.merging(headers) { first, _ in first }
+    urlRequest.httpMethod = invokeOptions.method?.rawValue ?? "POST
+    urlRequest.httpBody = invokeOptions.body
 
-    guard let httpResponse = response.response as? HTTPURLResponse else {
+    let (data, response) = try await fetch(urlRequest)
+
+    guard let httpResponse = response as? HTTPURLResponse else {
       throw URLError(.badServerResponse)
     }
 
     guard 200..<300 ~= httpResponse.statusCode else {
-      throw FunctionsError.httpError(code: httpResponse.statusCode, data: response.data)
+      throw FunctionsError.httpError(code: httpResponse.statusCode, data: data)
     }
 
     let isRelayError = httpResponse.value(forHTTPHeaderField: "x-relay-error") == "true"
@@ -96,6 +95,6 @@ public final class FunctionsClient {
       throw FunctionsError.relayError
     }
 
-    return (response.data, httpResponse)
+    return (data, httpResponse)
   }
 }

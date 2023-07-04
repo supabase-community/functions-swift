@@ -14,13 +14,11 @@ let package = Package(
   products: [
     .library(name: "Functions", targets: ["Functions"])
   ],
-  dependencies: [
-    .package(url: "https://github.com/kean/Get", from: "2.1.5")
-  ],
+  dependencies: [],
   targets: [
     .target(
       name: "Functions",
-      dependencies: ["Get"]
+      dependencies: []
     ),
     .testTarget(
       name: "FunctionsTests",
