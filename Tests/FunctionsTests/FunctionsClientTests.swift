@@ -1,3 +1,4 @@
+import Mocker
 import XCTest
 
 @testable import Functions
@@ -6,12 +7,15 @@ final class FunctionsClientTests: XCTestCase {
   let url = URL(string: "http://localhost:5432/functions/v1")!
   let apiKey = "supabase.anon.key"
 
+  lazy var sut = FunctionsClient(url: url, headers: ["apikey": apiKey])
+
   func testInvoke() async throws {
+    let url = URL(string: "http://localhost:5432/functions/v1/hello_world")!
     var _request: URLRequest?
-    let sut = FunctionsClient(url: url, headers: ["apikey": apiKey]) {
-      _request = $0
-      return (Data(), HTTPURLResponse.mock(url: self.url))
-    }
+
+    var mock = Mock(url: url, dataType: .json, statusCode: 200, data: [.post: Data()])
+    mock.onRequestHandler = .init { _request = $0 }
+    mock.register()
 
     let body = ["name": "Supabase"]
 
@@ -22,18 +26,22 @@ final class FunctionsClientTests: XCTestCase {
 
     let request = try XCTUnwrap(_request)
 
-    XCTAssertEqual(request.url, URL(string: "http://localhost:5432/functions/v1/hello_world"))
+    XCTAssertEqual(request.url, url)
     XCTAssertEqual(request.httpMethod, "POST")
     XCTAssertEqual(request.value(forHTTPHeaderField: "apikey"), apiKey)
     XCTAssertEqual(request.value(forHTTPHeaderField: "X-Custom-Key"), "value")
     XCTAssertEqual(
-      request.value(forHTTPHeaderField: "X-Client-Info"), "functions-swift/\(Functions.version)")
+      request.value(forHTTPHeaderField: "X-Client-Info"),
+      "functions-swift/\(Functions.version)"
+    )
   }
 
   func testInvoke_shouldThrow_URLError_badServerResponse() async {
-    let sut = FunctionsClient(url: url) { _ in
-      (Data(), URLResponse())
-    }
+    let url = URL(string: "http://localhost:5432/functions/v1/hello_world")!
+    let mock = Mock(
+      url: url, dataType: .json, statusCode: 200, data: [.post: Data()],
+      requestError: URLError(.badServerResponse))
+    mock.register()
 
     do {
       try await sut.invoke(functionName: "hello_world")
@@ -45,12 +53,10 @@ final class FunctionsClientTests: XCTestCase {
   }
 
   func testInvoke_shouldThrow_FunctionsError_httpError() async {
-    let sut = FunctionsClient(url: url) { _ in
-      (
-        "error".data(using: .utf8)!,
-        HTTPURLResponse.mock(url: self.url, statusCode: 300)
-      )
-    }
+    let url = URL(string: "http://localhost:5432/functions/v1/hello_world")!
+    let mock = Mock(
+      url: url, dataType: .json, statusCode: 300, data: [.post: "error".data(using: .utf8)!])
+    mock.register()
 
     do {
       try await sut.invoke(functionName: "hello_world")
@@ -64,12 +70,11 @@ final class FunctionsClientTests: XCTestCase {
   }
 
   func testInvoke_shouldThrow_FunctionsError_relayError() async {
-    let sut = FunctionsClient(url: url) { _ in
-      (
-        Data(),
-        HTTPURLResponse.mock(url: self.url, headerFields: ["x-relay-error": "true"])
-      )
-    }
+    let url = URL(string: "http://localhost:5432/functions/v1/hello_world")!
+    let mock = Mock(
+      url: url, dataType: .json, statusCode: 200, data: [.post: Data()],
+      additionalHeaders: ["x-relay-error": "true"])
+    mock.register()
 
     do {
       try await sut.invoke(functionName: "hello_world")
@@ -79,14 +84,10 @@ final class FunctionsClientTests: XCTestCase {
       XCTFail("Unexpected error thrown \(error)")
     }
   }
-}
 
-extension HTTPURLResponse {
-  static func mock(
-    url: URL,
-    statusCode: Int = 200,
-    headerFields: [String: String]? = nil
-  ) -> HTTPURLResponse {
-    HTTPURLResponse(url: url, statusCode: statusCode, httpVersion: nil, headerFields: headerFields)!
+  func test_setAuth() async {
+    await sut.setAuth(token: "access.token")
+    let headers = await sut.headers
+    XCTAssertEqual(headers["Authorization"], "Bearer access.token")
   }
 }

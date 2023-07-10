@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.8
 
 import PackageDescription
 
@@ -14,7 +14,9 @@ let package = Package(
   products: [
     .library(name: "Functions", targets: ["Functions"])
   ],
-  dependencies: [],
+  dependencies: [
+    .package(url: "https://github.com/WeTransfer/Mocker", from: "3.0.1")
+  ],
   targets: [
     .target(
       name: "Functions",
@@ -22,7 +24,10 @@ let package = Package(
     ),
     .testTarget(
       name: "FunctionsTests",
-      dependencies: ["Functions"]
+      dependencies: [
+        "Functions",
+        "Mocker",
+      ]
     ),
   ]
 )
