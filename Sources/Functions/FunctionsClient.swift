@@ -1,19 +1,23 @@
 import Foundation
 
 public actor FunctionsClient {
+  public typealias FetchHandler = @Sendable (_ request: URLRequest) async throws -> (
+    Data, URLResponse
+  )
+
   let url: URL
   var headers: [String: String]
-  let session: URLSession
+  let fetch: FetchHandler
 
   public init(
     url: URL,
     headers: [String: String] = [:],
-    session: URLSession = .shared
+    fetch: @escaping FetchHandler = { try await URLSession.shared.data(for: $0) }
   ) {
     self.url = url
     self.headers = headers
     self.headers["X-Client-Info"] = "functions-swift/\(version)"
-    self.session = session
+    self.fetch = fetch
   }
 
   /// Updates the authorization header.
@@ -77,7 +81,7 @@ public actor FunctionsClient {
     urlRequest.httpMethod = invokeOptions.method?.rawValue ?? "POST
     urlRequest.httpBody = invokeOptions.body
 
-    let (data, response) = try await session.data(for: urlRequest)
+    let (data, response) = try await fetch(urlRequest)
 
     guard let httpResponse = response as? HTTPURLResponse else {
       throw URLError(.badServerResponse)
