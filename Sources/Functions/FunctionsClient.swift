@@ -76,7 +76,7 @@ public final class FunctionsClient {
   ) async throws -> (Data, HTTPURLResponse) {
     let request = Request(
       path: functionName,
-      method: .post,
+      method: invokeOptions.method.map({ HTTPMethod(rawValue: $0.rawValue) }) ?? .post,
       body: invokeOptions.body,
       headers: invokeOptions.headers.merging(headers) { first, _ in first }
     )
@@ -87,7 +87,7 @@ public final class FunctionsClient {
       throw URLError(.badServerResponse)
     }
 
-    guard 200 ..< 300 ~= httpResponse.statusCode else {
+    guard 200..<300 ~= httpResponse.statusCode else {
       throw FunctionsError.httpError(code: httpResponse.statusCode, data: response.data)
     }
 

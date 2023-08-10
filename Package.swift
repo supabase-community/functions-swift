@@ -12,10 +12,10 @@ let package = Package(
     .tvOS(.v13),
   ],
   products: [
-    .library(name: "Functions", targets: ["Functions"]),
+    .library(name: "Functions", targets: ["Functions"])
   ],
   dependencies: [
-    .package(url: "https://github.com/kean/Get", from: "2.1.5"),
+    .package(url: "https://github.com/kean/Get", from: "2.1.5")
   ],
   targets: [
     .target(

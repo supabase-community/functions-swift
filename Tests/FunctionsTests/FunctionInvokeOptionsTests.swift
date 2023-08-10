@@ -1,5 +1,6 @@
-@testable import Functions
 import XCTest
+
+@testable import Functions
 
 final class FunctionInvokeOptionsTests: XCTestCase {
   func testStringBody() {

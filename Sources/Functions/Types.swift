@@ -13,10 +13,11 @@ public enum FunctionsError: Error, LocalizedError {
 }
 
 public struct FunctionInvokeOptions {
+  let method: Method?
   let headers: [String: String]
   let body: Data?
 
-  public init(headers: [String: String] = [:], body: some Encodable) {
+  public init(method: Method? = nil, headers: [String: String] = [:], body: some Encodable) {
     var headers = headers
 
     switch body {
@@ -32,11 +33,21 @@ public struct FunctionInvokeOptions {
       self.body = try? JSONEncoder().encode(body)
     }
 
+    self.method = method
     self.headers = headers
   }
 
-  public init(headers: [String: String] = [:]) {
+  public init(method: Method? = nil, headers: [String: String] = [:]) {
+    self.method = method
     self.headers = headers
     body = nil
+  }
+
+  public enum Method: String {
+    case get = "GET"
+    case post = "POST"
+    case put = "PUT"
+    case patch = "PATCH"
+    case delete = "DELETE"
   }
 }
