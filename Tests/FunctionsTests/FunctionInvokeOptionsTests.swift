@@ -23,4 +23,15 @@ final class FunctionInvokeOptionsTests: XCTestCase {
     XCTAssertEqual(options.headers["Content-Type"], "application/json")
     XCTAssertNotNil(options.body)
   }
+
+  func testMultipartFormDataBody() {
+    let boundary = "Boundary-\(UUID().uuidString)"
+    let contentType = "multipart/form-data; boundary=\(boundary)"
+    let options = FunctionInvokeOptions(
+      headers: ["Content-Type": contentType],
+      body: "binary value".data(using: .utf8)!
+    )
+    XCTAssertEqual(options.headers["Content-Type"], contentType)
+    XCTAssertNotNil(options.body)
+  }
 }
