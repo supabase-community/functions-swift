@@ -31,7 +31,7 @@ public final class FunctionsClient {
   ///   - functionName: the name of the function to invoke.
   public func invoke<Response>(
     functionName: String,
-    query: [(String, String?)]?,
+    query: [(String, String?)]? = nil,
     invokeOptions: FunctionInvokeOptions = .init(),
     decode: (Data, HTTPURLResponse) throws -> Response
   ) async throws -> Response {
@@ -48,7 +48,7 @@ public final class FunctionsClient {
   ///   - functionName: the name of the function to invoke.
   public func invoke<T: Decodable>(
     functionName: String,
-    query: [(String, String?)]?,
+    query: [(String, String?)]? = nil,
     invokeOptions: FunctionInvokeOptions = .init(),
     decoder: JSONDecoder = JSONDecoder()
   ) async throws -> T {
@@ -65,7 +65,7 @@ public final class FunctionsClient {
   ///   - functionName: the name of the function to invoke.
   public func invoke(
     functionName: String,
-    query: [(String, String?)]?,
+    query: [(String, String?)]? = nil,
     invokeOptions: FunctionInvokeOptions = .init()
   ) async throws {
     try await invoke(
@@ -78,7 +78,7 @@ public final class FunctionsClient {
 
   private func rawInvoke(
     functionName: String,
-    query: [(String, String?)]?,
+    query: [(String, String?)]? = nil,
     invokeOptions: FunctionInvokeOptions
   ) async throws -> (Data, HTTPURLResponse) {
     let request = Request(
