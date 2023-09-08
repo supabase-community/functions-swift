@@ -31,11 +31,13 @@ public final class FunctionsClient {
   ///   - functionName: the name of the function to invoke.
   public func invoke<Response>(
     functionName: String,
+    query: [(String, String?)]?,
     invokeOptions: FunctionInvokeOptions = .init(),
     decode: (Data, HTTPURLResponse) throws -> Response
   ) async throws -> Response {
     let (data, response) = try await rawInvoke(
       functionName: functionName,
+      query: query,
       invokeOptions: invokeOptions
     )
     return try decode(data, response)
@@ -46,11 +48,13 @@ public final class FunctionsClient {
   ///   - functionName: the name of the function to invoke.
   public func invoke<T: Decodable>(
     functionName: String,
+    query: [(String, String?)]?,
     invokeOptions: FunctionInvokeOptions = .init(),
     decoder: JSONDecoder = JSONDecoder()
   ) async throws -> T {
     try await invoke(
       functionName: functionName,
+      query: query,
       invokeOptions: invokeOptions,
       decode: { data, _ in try decoder.decode(T.self, from: data) }
     )
@@ -61,10 +65,12 @@ public final class FunctionsClient {
   ///   - functionName: the name of the function to invoke.
   public func invoke(
     functionName: String,
+    query: [(String, String?)]?,
     invokeOptions: FunctionInvokeOptions = .init()
   ) async throws {
     try await invoke(
       functionName: functionName,
+      query: query,
       invokeOptions: invokeOptions,
       decode: { _, _ in () }
     )
@@ -72,11 +78,13 @@ public final class FunctionsClient {
 
   private func rawInvoke(
     functionName: String,
+    query: [(String, String?)]?,
     invokeOptions: FunctionInvokeOptions
   ) async throws -> (Data, HTTPURLResponse) {
     let request = Request(
       path: functionName,
       method: invokeOptions.method.map({ HTTPMethod(rawValue: $0.rawValue) }) ?? .post,
+      query: query,
       body: invokeOptions.body,
       headers: invokeOptions.headers.merging(headers) { first, _ in first }
     )
