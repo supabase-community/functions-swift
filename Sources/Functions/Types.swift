@@ -20,6 +20,7 @@ public enum FunctionsError: Error, LocalizedError {
 
 /// Options for invoking a function.
 public struct FunctionInvokeOptions {
+  /// Method to use in the function invocation.
   let method: Method?
   /// Headers to be included in the function invocation.
   let headers: [String: String]
@@ -27,8 +28,9 @@ public struct FunctionInvokeOptions {
   let body: Data?
 
   /// Initializes the `FunctionInvokeOptions` structure.
-  ///
+  /// 
   /// - Parameters:
+  ///   - method: Method to use in the function invocation.
   ///   - headers: Headers to be included in the function invocation. (Default: empty dictionary)
   ///   - body: The body data to be sent with the function invocation. (Default: nil)
   public init(method: Method? = nil, headers: [String: String] = [:], body: some Encodable) {
@@ -53,7 +55,9 @@ public struct FunctionInvokeOptions {
 
   /// Initializes the `FunctionInvokeOptions` structure.
   ///
-  /// - Parameter headers: Headers to be included in the function invocation. (Default: empty dictionary)
+  /// - Parameters:
+  ///   - method: Method to use in the function invocation.
+  ///   - headers: Headers to be included in the function invocation. (Default: empty dictionary)
   public init(method: Method? = nil, headers: [String: String] = [:]) {
     self.method = method
     self.headers = headers

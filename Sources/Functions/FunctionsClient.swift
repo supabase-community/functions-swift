@@ -91,7 +91,7 @@ public actor FunctionsClient {
     let url = self.url.appendingPathComponent(functionName)
     var urlRequest = URLRequest(url: url)
     urlRequest.allHTTPHeaderFields = invokeOptions.headers.merging(headers) { first, _ in first }
-    urlRequest.httpMethod = invokeOptions.method?.rawValue ?? "POST
+    urlRequest.httpMethod = (invokeOptions.method ?? .post).rawValue
     urlRequest.httpBody = invokeOptions.body
 
     let (data, response) = try await fetch(urlRequest)
