@@ -1,12 +1,12 @@
 {
   "pins" : [
     {
-      "identity" : "get",
+      "identity" : "mocker",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/kean/Get",
+      "location" : "https://github.com/WeTransfer/Mocker",
       "state" : {
-        "revision" : "12830cc64f31789ae6f4352d2d51d03a25fc3741",
-        "version" : "2.1.6"
+        "revision" : "4384e015cae4916a6828252467a4437173c7ae17",
+        "version" : "3.0.1"
       }
     }
   ],

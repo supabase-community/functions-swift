@@ -15,16 +15,19 @@ let package = Package(
     .library(name: "Functions", targets: ["Functions"])
   ],
   dependencies: [
-    .package(url: "https://github.com/kean/Get", from: "2.1.5")
+    .package(url: "https://github.com/WeTransfer/Mocker", from: "3.0.1")
   ],
   targets: [
     .target(
       name: "Functions",
-      dependencies: ["Get"]
+      dependencies: []
     ),
     .testTarget(
       name: "FunctionsTests",
-      dependencies: ["Functions"]
+      dependencies: [
+        "Functions",
+        "Mocker",
+      ]
     ),
   ]
 )
